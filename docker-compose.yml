@@ -1,0 +1,42 @@
+version: "3.9"
+
+services:
+  # ── MongoDB ─────────────────────────────────────────────────
+  mongo:
+    image: mongo:7
+    container_name: papernews-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: papernews
+
+  # ── PaperNews API ──────────────────────────────────────────
+  api:
+    build: .
+    container_name: papernews-api
+    restart: unless-stopped
+    ports:
+      - "${PORT:-7000}:7000"
+    depends_on:
+      - mongo
+    environment:
+      NODE_ENV: production
+      PORT: 7000
+      MONGO_URI: mongodb://mongo:27017/papernews
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-change_me_access}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-change_me_refresh}
+      JWT_RESET_SECRET: ${JWT_RESET_SECRET:-change_me_reset}
+      JWT_ACCESS_EXPIRES: ${JWT_ACCESS_EXPIRES:-15m}
+      JWT_REFRESH_EXPIRES: ${JWT_REFRESH_EXPIRES:-7d}
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME:-PaperNews}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-noreply@papernews.com}
+
+volumes:
+  mongo-data:
